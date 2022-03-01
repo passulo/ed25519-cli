@@ -25,11 +25,13 @@ jobs:
             local_path: ed25519-cli\target\ed25519.exe
     steps:
       - uses: actions/checkout@v2
-      - uses: ayltai/setup-graalvm@dfe75f2b150a3c7230cb43c4aca23eb50423d62f
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
         with:
-          java-version: 17
-          graalvm-version: 22.0.0.2
-          native-image: true
+          version: '22.0.0.2'
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: olafurpg/setup-scala@v13
         with:
           java-version: 17
