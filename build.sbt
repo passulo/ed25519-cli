@@ -34,7 +34,7 @@ lazy val root = (project in file("."))
 
 lazy val picocliCodegen = inputKey[Unit]("Generate the reflection.json that helps GraalVM understand how reflection is used in Picocli.")
 
-addCommandAlias("build", "clean; compile; picocliCodegen; nativeImageRunAgent; nativeImage")
+addCommandAlias("build", "clean; compile; picocliCodegen; nativeImage")
 addCommandAlias("buildIncremental", "compile; picocliCodegen; nativeImageRunAgent; nativeImage")
 
 lazy val dependencies = Seq(

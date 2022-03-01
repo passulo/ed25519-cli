@@ -30,7 +30,7 @@ jobs:
         with:
           version: '22.0.0.2'
           java-version: '17'
-          components: 'native-image, native-image-agent'
+          components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: olafurpg/setup-scala@v13
         with:
