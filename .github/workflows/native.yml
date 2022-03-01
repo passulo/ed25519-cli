@@ -5,14 +5,14 @@ on:
       - main
   pull_request:
   release:
-    types: [published]
+    types: [ published ]
 jobs:
   unix:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
+        os: [ macOS-latest, ubuntu-latest, windows-latest ]
         include:
           - os: macOS-latest
             uploaded_filename: ed25519-x86_64-apple-darwin
@@ -26,6 +26,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: olafurpg/setup-scala@v13
+        with:
+          java-version: 17
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
       - run: git fetch --tags || true
       - run: sbt build
         shell: bash
