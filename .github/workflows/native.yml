@@ -16,13 +16,13 @@ jobs:
         include:
           - os: macOS-latest
             uploaded_filename: ed25519-x86_64-apple-darwin
-            local_path: ed25519-cli/target/ed25519
+            local_path: target/ed25519
           - os: ubuntu-latest
             uploaded_filename: ed25519-x86_64-pc-linux
-            local_path: ed25519-cli/ed25519-cli/target/ed25519
+            local_path: target/ed25519
           - os: windows-latest
             uploaded_filename: ed25519-x86_64-pc-win32.exe
-            local_path: ed25519-cli\target\ed25519.exe
+            local_path: target\ed25519.exe
     steps:
       - uses: actions/checkout@v2
       - name: Setup GraalVM
@@ -40,18 +40,6 @@ jobs:
       - run: git fetch --tags || true
       - run: sbt build
         shell: bash
-        if: ${{ matrix.os != 'windows-latest' }}
-      - run: echo $(pwd)
-        shell: bash
-      - name: sbt test
-        shell: cmd
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: >-
-          "C:\Program Files (x86)\Microsoft Visual
-          Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && sbt
-          build
-      - name: List all files
-        run: tree
       - uses: actions/upload-artifact@v2
         with:
           path: ${{ matrix.local_path }}
