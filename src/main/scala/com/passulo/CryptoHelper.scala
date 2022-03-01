@@ -1,10 +1,13 @@
 package com.passulo
 
+import java.io.File
+import java.nio.file.Files
 import java.security.*
 import java.security.cert.{CertificateFactory, X509Certificate}
 import java.security.interfaces.EdECPublicKey
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import java.util.Base64
+import scala.jdk.CollectionConverters.*
 import scala.util.{Success, Try}
 
 /** Collection of helpful abstractions to load and decode certificates and keys, using java.Security and bouncy castle.
@@ -38,8 +41,8 @@ object CryptoHelper {
   }
 
   /** Reads an Ed25519 public key stored in X.509 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
-  def loadX509EncodedPEM(filename: String): EdECPublicKey = {
-    val keyBytes   = decodePEM(filename)
+  def loadX509EncodedPEM(file: File): EdECPublicKey = {
+    val keyBytes   = decodePEM(file)
     val spec       = new X509EncodedKeySpec(keyBytes)
     val keyFactory = KeyFactory.getInstance("ed25519")
     keyFactory.generatePublic(spec) match {
@@ -48,8 +51,8 @@ object CryptoHelper {
   }
 
   /** Reads an Ed25519 private key stored in PKCS #8 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
-  def loadPKCS8EncodedPEM(filename: String): PrivateKey = {
-    val keyBytes   = decodePEM(filename)
+  def loadPKCS8EncodedPEM(file: File): PrivateKey = {
+    val keyBytes   = decodePEM(file)
     val spec       = new PKCS8EncodedKeySpec(keyBytes)
     val keyFactory = KeyFactory.getInstance("ed25519")
     keyFactory.generatePrivate(spec)
@@ -59,6 +62,12 @@ object CryptoHelper {
   def decodePEM(filename: String): Array[Byte] = {
     val file             = FileOperations.loadFile(filename)
     val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
+    Base64.getDecoder.decode(encodedKeyString)
+  }
+
+  /** Reads a file in PEM format, returns the payload (between the lines). */
+  def decodePEM(file: File): Array[Byte] = {
+    val encodedKeyString = Files.readAllLines(file.toPath).asScala.filterNot(_.startsWith("----")).mkString("")
     Base64.getDecoder.decode(encodedKeyString)
   }
 

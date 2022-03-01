@@ -1,6 +1,6 @@
 package com.passulo
 
-import java.io.FileNotFoundException
+import java.io.{File, FileNotFoundException}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths, StandardOpenOption}
 import scala.io.{BufferedSource, Source}
@@ -28,4 +28,7 @@ object FileOperations {
       StdOutText.error(s"File not found.")
       throw new FileNotFoundException(filename)
     }
+
+  def loadFile(file: File): BufferedSource =
+    Source.fromFile(file)
 }

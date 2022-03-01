@@ -12,18 +12,19 @@ lazy val root = (project in file("."))
     developers           := List(Developer("jannikarndt", "Jannik Arndt", "jannik@jannikarndt", url("https://github.com/JannikArndt"))),
     version              := "1.0.0",
     scalaVersion         := "2.13.8",
-    Compile / mainClass  := Some("com.passulo.Main"),
+    Compile / mainClass  := Some("com.passulo.Ed25519cli"),
     scalacOptions        := scalaCompilerOptions,
     libraryDependencies ++= dependencies
   )
   .enablePlugins(NativeImagePlugin)
   .settings(
     picocliCodegen := (Compile / runMain)
-      .fullInput(s" picocli.codegen.aot.graalvm.ReflectionConfigGenerator -o=target/native-image-configs/cli-reflection.json com.passulo.TopCommand")
+      .fullInput(s" picocli.codegen.aot.graalvm.ReflectionConfigGenerator -o=target/native-image-configs/cli-reflection.json com.passulo.Ed25519cli")
       .evaluated,
-    nativeImageJvm     := "graalvm-java17",
-    nativeImageOutput  := file("target") / "ed25519",
-    nativeImageVersion := "22.0.0.2",
+    picocliAutoComplete := (Compile / runMain).fullInput(s" picocli.AutoComplete -f -o target/ed25519_completion.sh -n ed25519 com.passulo.TopCommand").evaluated,
+    nativeImageJvm      := "graalvm-java17",
+    nativeImageOutput   := file("target") / "ed25519",
+    nativeImageVersion  := "22.0.0.2",
     nativeImageOptions := Seq(
       "-H:+ReportExceptionStackTraces",                                                                    // if native-image can't be created, tell us why
       "--no-fallback",                                                                                     // do not automatically create a JVM-based image, just fail
@@ -32,10 +33,11 @@ lazy val root = (project in file("."))
     )
   )
 
-lazy val picocliCodegen = inputKey[Unit]("Generate the reflection.json that helps GraalVM understand how reflection is used in Picocli.")
+lazy val picocliCodegen      = inputKey[Unit]("Generate the reflection.json that helps GraalVM understand how reflection is used in Picocli.")
+lazy val picocliAutoComplete = inputKey[Unit]("Generate the tab-completion file.")
 
 addCommandAlias("build", "clean; compile; picocliCodegen; nativeImage")
-addCommandAlias("buildIncremental", "compile; picocliCodegen; nativeImageRunAgent; nativeImage")
+addCommandAlias("buildIncremental", "compile; picocliAutoComplete; picocliCodegen; nativeImageRunAgent; nativeImage")
 
 lazy val dependencies = Seq(
   "info.picocli" % "picocli"         % "4.6.3",

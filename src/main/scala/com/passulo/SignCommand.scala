@@ -2,6 +2,7 @@ package com.passulo
 
 import picocli.CommandLine.{Command, Option, Parameters}
 
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 import java.util.concurrent.Callable
@@ -18,7 +19,7 @@ class SignCommand extends Callable[Int] {
   var text: String = _
 
   @Option(names = Array("-k", "--private-key"), description = Array("Path to the private key file."))
-  var privateKeyFile: String = "private.pem"
+  var privateKeyFile: File = new File("private.pem")
 
   @Option(names = Array("--url-encoded"), description = Array("Use Base64url encoding for output."))
   var urlEncoded: Boolean = false

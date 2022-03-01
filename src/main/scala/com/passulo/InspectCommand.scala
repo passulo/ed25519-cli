@@ -2,6 +2,7 @@ package com.passulo
 
 import picocli.CommandLine.{Command, Option}
 
+import java.io.File
 import java.security.PublicKey
 import java.security.interfaces.EdECPublicKey
 import java.util.HexFormat
@@ -10,18 +11,18 @@ import java.util.concurrent.Callable
 @Command(
   name = "inspect",
   mixinStandardHelpOptions = true,
-  description = Array("Uses the private key to sign text.")
+  description = Array("Outputs the hex values, format and parameters for a private or a public key.")
 )
 class InspectCommand extends Callable[Int] {
 
-  @Option(names = Array("--private-key"), description = Array("The private key to inspect."), converter = Array(classOf[OptionalParameter]))
-  var privateKeyFile: scala.Option[String] = None
+  @Option(names = Array("--private-key"), description = Array("The private key to inspect."))
+  var privateKeyFile: File = _
 
-  @Option(names = Array("--public-key"), description = Array("The public key to inspect."), converter = Array(classOf[OptionalParameter]))
-  var publicKeyFile: scala.Option[String] = None
+  @Option(names = Array("--public-key"), description = Array("The public key to inspect."))
+  var publicKeyFile: File = _
 
   def call(): Int = {
-    privateKeyFile.foreach { filename =>
+    scala.Option(privateKeyFile).foreach { filename =>
       val privateKey = CryptoHelper.loadPKCS8EncodedPEM(filename)
       println(StdOutText.headline("Private Key"))
       println()
@@ -30,6 +31,7 @@ class InspectCommand extends Callable[Int] {
       println(s"Algorithm:   ${privateKey.getAlgorithm}")
       println(s"Format:      ${privateKey.getFormat}")
       println(s"Hex:         ${HexFormat.of().withDelimiter(":").formatHex(privateKey.getEncoded.drop(16))}")
+      println()
 
 //      Computing the Public Key from seed is possible, but hidden in the module sun.security.ec.SunEC
 //      val spec      = NamedParameterSpec.ED25519
@@ -39,7 +41,7 @@ class InspectCommand extends Callable[Int] {
 //      printPublicKeyInfo(publicKey, CryptoHelper.encodeAsPEM(publicKey))
     }
 
-    publicKeyFile.foreach { filename =>
+    scala.Option(publicKeyFile).foreach { filename =>
       val raw       = FileOperations.loadFile(filename).getLines().map(StdOutText.code).mkString("\n")
       val publicKey = CryptoHelper.loadX509EncodedPEM(filename)
       printPublicKeyInfo(publicKey, raw)

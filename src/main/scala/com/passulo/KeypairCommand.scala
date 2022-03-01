@@ -8,7 +8,7 @@ import scala.annotation.nowarn
 @Command(
   name = "keypair",
   mixinStandardHelpOptions = true,
-  description = Array("Creates a private and a public key based on the Ed25519 algorithm and writes them to 'private.pem' and 'public.pem'.")
+  description = Array("Creates a key-pair based on the Ed25519 algorithm and writes the keys to 'private.pem' and 'public.pem'.")
 )
 class KeypairCommand extends Callable[Int] {
 
