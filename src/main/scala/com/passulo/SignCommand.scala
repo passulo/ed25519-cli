@@ -24,7 +24,7 @@ class SignCommand extends Callable[Int] {
   var urlEncoded: Boolean = false
 
   def call(): Int = {
-    val privateKey = CryptoHelper.privateKeyFromFile(privateKeyFile)
+    val privateKey = CryptoHelper.loadPKCS8EncodedPEM(privateKeyFile)
 
     val message = text.getBytes(StandardCharsets.UTF_8)
     val signed  = CryptoHelper.sign(message, privateKey)

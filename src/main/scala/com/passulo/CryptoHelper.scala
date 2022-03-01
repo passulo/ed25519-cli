@@ -2,10 +2,9 @@ package com.passulo
 
 import java.security.*
 import java.security.cert.{CertificateFactory, X509Certificate}
-import java.security.interfaces.{EdECPrivateKey, EdECPublicKey}
+import java.security.interfaces.EdECPublicKey
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import java.util.Base64
-import scala.io.Source
 import scala.util.{Success, Try}
 
 /** Collection of helpful abstractions to load and decode certificates and keys, using java.Security and bouncy castle.
@@ -15,22 +14,10 @@ import scala.util.{Success, Try}
 object CryptoHelper {
 
   def generateKeyPair(overwrite: Boolean, privateFile: String = "private.pem", publicFile: String = "public.pem"): Either[String, Success.type] = {
-    val generator = KeyPairGenerator.getInstance("ed25519")
-    val keypair   = generator.generateKeyPair()
-    val publicKey = keypair.getPublic match {
-      case publicKey: EdECPublicKey =>
-        val encoded = Base64.getEncoder.encodeToString(publicKey.getEncoded)
-        s"""-----BEGIN PUBLIC KEY-----
-           |$encoded
-           |-----END PUBLIC KEY-----""".stripMargin
-    }
-    val privateKey = keypair.getPrivate match {
-      case privateKey: EdECPrivateKey =>
-        val encoded = Base64.getEncoder.encodeToString(privateKey.getEncoded)
-        s"""-----BEGIN PRIVATE KEY-----
-           |$encoded
-           |-----END PRIVATE KEY-----""".stripMargin
-    }
+    val generator  = KeyPairGenerator.getInstance("ed25519")
+    val keypair    = generator.generateKeyPair()
+    val publicKey  = encodeAsPEM(keypair.getPublic)
+    val privateKey = encodeAsPEM(keypair.getPrivate)
 
     for {
       _ <- FileOperations.writeFile(privateFile, privateKey, overwrite)
@@ -38,26 +25,41 @@ object CryptoHelper {
     } yield Success
   }
 
+  def encodeAsPEM(key: Key): String = {
+    val identifier = key match {
+      case _: PrivateKey => "PRIVATE"
+      case _: PublicKey  => "PUBLIC"
+      case key           => throw new UnknownError(s"Unknown key type: ${key.getFormat}")
+    }
+    val encoded = Base64.getEncoder.encodeToString(key.getEncoded)
+    s"""-----BEGIN $identifier KEY-----
+       |$encoded
+       |-----END $identifier KEY-----""".stripMargin
+  }
+
   /** Reads an Ed25519 public key stored in X.509 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
-  def publicKeyFromFile(path: String): Option[EdECPublicKey] = {
-    val file             = Source.fromResource(path)
-    val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
-    val keyBytes         = Base64.getDecoder.decode(encodedKeyString)
-    val spec             = new X509EncodedKeySpec(keyBytes)
-    val keyFactory       = KeyFactory.getInstance("ed25519")
+  def loadX509EncodedPEM(filename: String): EdECPublicKey = {
+    val keyBytes   = decodePEM(filename)
+    val spec       = new X509EncodedKeySpec(keyBytes)
+    val keyFactory = KeyFactory.getInstance("ed25519")
     keyFactory.generatePublic(spec) match {
-      case key: EdECPublicKey => Some(key)
+      case key: EdECPublicKey => key
     }
   }
 
   /** Reads an Ed25519 private key stored in PKCS #8 Encoding (base64) in a PEM file (-----BEGIN … END … KEY-----) */
-  def privateKeyFromFile(path: String): PrivateKey = {
-    val file             = FileOperations.loadFile(path)
-    val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
-    val keyBytes         = Base64.getDecoder.decode(encodedKeyString)
-    val spec             = new PKCS8EncodedKeySpec(keyBytes)
-    val keyFactory       = KeyFactory.getInstance("ed25519")
+  def loadPKCS8EncodedPEM(filename: String): PrivateKey = {
+    val keyBytes   = decodePEM(filename)
+    val spec       = new PKCS8EncodedKeySpec(keyBytes)
+    val keyFactory = KeyFactory.getInstance("ed25519")
     keyFactory.generatePrivate(spec)
+  }
+
+  /** Reads a file in PEM format, returns the payload (between the lines). */
+  def decodePEM(filename: String): Array[Byte] = {
+    val file             = FileOperations.loadFile(filename)
+    val encodedKeyString = file.getLines().filterNot(_.startsWith("----")).mkString("")
+    Base64.getDecoder.decode(encodedKeyString)
   }
 
   /** Reads an X.509 Certificate from a file */

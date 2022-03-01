@@ -2,7 +2,7 @@ package com.passulo
 
 import picocli.CommandLine
 import picocli.CommandLine.Help.Ansi
-import picocli.CommandLine.{usage, Command}
+import picocli.CommandLine.{Command, ITypeConverter, usage}
 
 import java.util.concurrent.Callable
 
@@ -14,14 +14,17 @@ object Main {
 }
 
 object StdOutText {
-  def error(text: String): String   = Ansi.AUTO.string(s"@|bold,red $text|@")
-  def success(text: String): String = Ansi.AUTO.string(s"@|bold,green $text|@")
+  def error(text: String): String    = Ansi.AUTO.string(s"@|bold,red $text|@")
+  def success(text: String): String  = Ansi.AUTO.string(s"@|bold,green $text|@")
+  def headline(text: String): String = Ansi.AUTO.string(s"@|bold,underline $text|@")
+  def code(text: String): String = Ansi.AUTO.string(s"@|cyan $text|@")
 }
 
 @Command(
   name = "",
   subcommands = Array(
     classOf[KeypairCommand],
+    classOf[InspectCommand],
     classOf[SignCommand]
   ),
   mixinStandardHelpOptions = true,
@@ -33,4 +36,8 @@ class TopCommand extends Callable[Int] {
     usage(this, System.out)
     0
   }
+}
+
+class OptionalParameter extends ITypeConverter[Option[String]] {
+  override def convert(value: String): Option[String] = Option(value)
 }
