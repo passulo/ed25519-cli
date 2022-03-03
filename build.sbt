@@ -41,7 +41,7 @@ addCommandAlias("buildIncremental", "compile; picocliAutoComplete; picocliCodege
 
 lazy val dependencies = Seq(
   "info.picocli" % "picocli"         % "4.6.3",
-  "info.picocli" % "picocli-codegen" % "4.6.2"
+  "info.picocli" % "picocli-codegen" % "4.6.3"
 )
 
 lazy val scalaCompilerOptions = Seq(
